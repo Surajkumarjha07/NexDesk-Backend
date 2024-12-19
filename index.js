@@ -33,6 +33,8 @@ app.use('/updateUser', updateUser)
 app.use("/deleteUser", deleteUser)
 app.use("/getUser", getUser)
 
+const colors = ["bg-red-200", "bg-blue-200", "bg-yellow-200", "bg-green-200", "bg-orange-200", "bg-pink-200", "bg-violet-200"];
+
 //Socket Connection
 const server = http.createServer(app);
 const io = new Server(server, {
@@ -59,7 +61,6 @@ io.on('connection', (socket) => {
             let pos = Math.floor(Math.random() * nums.length);
             meetingCode = meetingCode + nums[pos];
         }
-        console.log("new meeting room ", email, meetingCode);
         EmailToRoom.set(email, meetingCode);
         if (!RoomToEmail.has(meetingCode)) {
             RoomToEmail.set(meetingCode,[]);
@@ -67,7 +68,6 @@ io.on('connection', (socket) => {
         RoomToEmail.get(meetingCode).push(email);
         socket.join(meetingCode);
         socket.emit('roomCreated', email, meetingCode);
-        console.log("users in room: ", io.sockets.adapter.rooms.get(meetingCode));
     })
 
     socket.on('joinRoom', (email, meetingCode) => {
@@ -79,17 +79,19 @@ io.on('connection', (socket) => {
             RoomToEmail.set(meetingCode,[]);
         }
         RoomToEmail.get(meetingCode).push(email);
-        console.log("new user joined: ", email, meetingCode);
     })
 
     socket.on("message", (email, message, meetingCode) => {
         io.to(meetingCode).emit("messageArrived", email, message);
-        console.log("message: ", email, message);
     })
 
     socket.on("getMembers", (meetingCode) => {
-        socket.emit("fetchedMembers", RoomToEmail.get(meetingCode).length)
+        io.to(meetingCode).emit("fetchedMembers", RoomToEmail.get(meetingCode))
         console.log("room: ", RoomToEmail.get(meetingCode));
+    })
+
+    socket.on("itemDraw", (meetingCode,) => {
+        
     })
 
     socket.on('disconnect', () => {
