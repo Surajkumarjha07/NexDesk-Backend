@@ -7,7 +7,10 @@ const updateUser = require('./routes/update');
 const deleteUser = require('./routes/delete');
 const getUser = require("./routes/getUser")
 const { Server } = require('socket.io');
-const http = require('http')
+const http = require('http');
+const { handleShapeFeatures } = require("./Sockets/shapeSocket");
+const { handleNotesFeatures } = require('./Sockets/noteSocket');
+const { handleTextFeatures } = require('./Sockets/textSocket');
 
 const app = express();
 app.use(express.json());
@@ -90,45 +93,14 @@ io.on('connection', (socket) => {
         console.log("room: ", RoomToEmail.get(meetingCode));
     })
 
-    socket.on("itemDraw", (data) => {
-        const { meetingCode, id, x, y, width, height, shapeColor, shapeType, patternType, borderType, opacity, resize } = data;
-        socket.broadcast.to(meetingCode).emit("itemDrawed", { id, x, y, width, height, shapeColor, shapeType, patternType, borderType, opacity, resize });
-    })
+    //Shapes
+    handleShapeFeatures(socket);
 
-    socket.on("itemSelect", (data) => {
-        const { meetingCode, id } = data;
-        socket.broadcast.to(meetingCode).emit("itemSelected", id);
-    })
+    //Notes
+    handleNotesFeatures(socket);
 
-    socket.on("itemUnSelect", (meetingCode) => {
-        socket.broadcast.to(meetingCode).emit("itemUnSelected");
-    })
-
-    socket.on("itemErase", (data) => {
-        const { meetingCode, id } = data;
-        socket.broadcast.to(meetingCode).emit("itemErased", id);
-    })
-
-    socket.on("itemModify", (data) => {
-        const { meetingCode, id, shapeColor, patternType, borderType, opacity } = data;
-        socket.broadcast.to(meetingCode).emit("itemModified", { id, shapeColor, patternType, borderType, opacity })
-    })
-
-    socket.on("itemMoving", (data) => {
-        const { meetingCode, id, x, y } = data;
-        console.log(data);
-        socket.broadcast.to(meetingCode).emit("itemMoved", { id, x, y })
-    })
-
-    socket.on("itemHeightResize", (data) => {
-        const { meetingCode, id, newHeight } = data;
-        socket.broadcast.to(meetingCode).emit("itemHeightResized", {id, newHeight});
-    })
-
-    socket.on("itemWidthResize", (data) => {
-        const { meetingCode, id, newWidth } = data;
-        socket.broadcast.to(meetingCode).emit("itemWidthResized", {id, newWidth});
-    })
+    //Text
+    handleTextFeatures(socket);
 
     socket.on('disconnect', () => {
         console.log('A user disconnected', socket.id);
