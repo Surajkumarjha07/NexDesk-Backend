@@ -25,7 +25,6 @@ function handleShapeFeatures(socket) {
 
     socket.on("itemMoving", (data) => {
         const { meetingCode, id, x, y } = data;
-        console.log(data);
         socket.broadcast.to(meetingCode).emit("itemMoved", { id, x, y })
     })
 

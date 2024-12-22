@@ -75,7 +75,7 @@ io.on('connection', (socket) => {
 
     socket.on('joinRoom', (email, meetingCode) => {
         socket.join(meetingCode);
-        io.to(meetingCode).emit("newUserJoined", email, meetingCode);
+        socket.broadcast.to(meetingCode).emit("newUserJoined", email, meetingCode);
         io.to(socket.id).emit("roomJoined", email, meetingCode);
         EmailToRoom.set(email, meetingCode);
         if (!RoomToEmail.has(meetingCode)) {
