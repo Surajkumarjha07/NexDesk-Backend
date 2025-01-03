@@ -1,26 +1,32 @@
 const express = require('express');
 const ConnectDatabase = require('./database');
 const cors = require("cors");
+const jwt = require('jsonwebtoken');
 const SignUp = require('./routes/SignUp');
 const login = require("./routes/login");
 const updateUser = require('./routes/update');
 const deleteUser = require('./routes/delete');
 const getUser = require("./routes/getUser")
+const userAuthenticated = require("./routes/userAuthenticated")
 const { Server } = require('socket.io');
 const http = require('http');
 const { handleShapeFeatures } = require("./Sockets/shapeSocket");
 const { handleNotesFeatures } = require('./Sockets/noteSocket');
 const { handleTextFeatures } = require('./Sockets/textSocket');
+const authenticate = require('./middlewares/authenticate');
+const cookieParser = require('cookie-parser');
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 corsOptions = {
     methods: "*",
     origin: "http://localhost:3000",
-    allowCredentias: true,
-    allowOrigin: true
+    allowCredentials: true,
+    allowOrigin: true,
+    credentials: true
 }
 app.use(cors(corsOptions))
 
@@ -30,11 +36,12 @@ app.get("/", (req, res) => {
     res.send("Hello Mr. Wayne");
 })
 
-app.use("/signUp", SignUp)
-app.use("/login", login)
-app.use('/updateUser', updateUser)
-app.use("/deleteUser", deleteUser)
-app.use("/getUser", getUser)
+app.use("/signUp", SignUp);
+app.use("/login", login);
+app.use('/updateUser', authenticate, updateUser);
+app.use("/deleteUser", authenticate, deleteUser);
+app.use("/getUser", authenticate, getUser);
+app.use("/userAuthenticated", userAuthenticated);
 
 const colors = ["bg-red-200", "bg-blue-200", "bg-yellow-200", "bg-green-200", "bg-orange-200", "bg-pink-200", "bg-violet-200"];
 
