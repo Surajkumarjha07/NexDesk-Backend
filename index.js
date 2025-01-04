@@ -8,6 +8,7 @@ const updateUser = require('./routes/update');
 const deleteUser = require('./routes/delete');
 const getUser = require("./routes/getUser")
 const userAuthenticated = require("./routes/userAuthenticated")
+const signOut = require("./routes/signOut");
 const { Server } = require('socket.io');
 const http = require('http');
 const { handleShapeFeatures } = require("./Sockets/shapeSocket");
@@ -38,6 +39,7 @@ app.get("/", (req, res) => {
 
 app.use("/signUp", SignUp);
 app.use("/login", login);
+app.use("/signOut", signOut);
 app.use('/updateUser', authenticate, updateUser);
 app.use("/deleteUser", authenticate, deleteUser);
 app.use("/getUser", authenticate, getUser);
