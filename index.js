@@ -22,14 +22,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-corsOptions = {
-    methods: "*",
+const corsOptions = {
     origin: "http://localhost:3000",
-    allowCredentials: true,
-    allowOrigin: true,
-    credentials: true
-}
-app.use(cors(corsOptions))
+    methods: ["GET", "POST", "PUT", "DELETE", "HEAD", "PATCH", "OPTIONS"],
+    credentials: true,
+};
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 ConnectDatabase()
 
@@ -53,13 +52,13 @@ const io = new Server(server, {
     cors: corsOptions
 });
 
-const EmailToRoom = new Map();
-const RoomToEmail = new Map();
+const UserNameToEmail = new Map();
+const RoomToUserName = new Map();
 
 io.on('connection', (socket) => {
     console.log('socket io connected', socket.id);
 
-    socket.on("newMeeting", (email) => {
+    socket.on("newMeeting", (username) => {
         let alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklomnopqrstuvwxyz";
         let nums = "0123456789";
         let meetingCode = '';
@@ -73,33 +72,33 @@ io.on('connection', (socket) => {
             let pos = Math.floor(Math.random() * nums.length);
             meetingCode = meetingCode + nums[pos];
         }
-        EmailToRoom.set(email, meetingCode);
-        if (!RoomToEmail.has(meetingCode)) {
-            RoomToEmail.set(meetingCode, []);
+        UserNameToEmail.set(username, meetingCode);
+        if (!RoomToUserName.has(meetingCode)) {
+            RoomToUserName.set(meetingCode, []);
         }
-        RoomToEmail.get(meetingCode).push(email);
+        RoomToUserName.get(meetingCode).push(username);
         socket.join(meetingCode);
-        socket.emit('roomCreated', email, meetingCode);
+        socket.emit('roomCreated', username, meetingCode);
     })
 
-    socket.on('joinRoom', (email, meetingCode) => {
+    socket.on('joinRoom', (username, meetingCode) => {
         socket.join(meetingCode);
-        socket.broadcast.to(meetingCode).emit("newUserJoined", email, meetingCode);
-        io.to(socket.id).emit("roomJoined", email, meetingCode);
-        EmailToRoom.set(email, meetingCode);
-        if (!RoomToEmail.has(meetingCode)) {
-            RoomToEmail.set(meetingCode, []);
+        socket.broadcast.to(meetingCode).emit("newUserJoined", username, meetingCode);
+        io.to(socket.id).emit("roomJoined", username, meetingCode);
+        UserNameToEmail.set(username, meetingCode);
+        if (!RoomToUserName.has(meetingCode)) {
+            RoomToUserName.set(meetingCode, []);
         }
-        RoomToEmail.get(meetingCode).push(email);
+        RoomToUserName.get(meetingCode).push(username);
     })
 
-    socket.on("message", (email, message, meetingCode) => {
-        io.to(meetingCode).emit("messageArrived", email, message);
+    socket.on("message", (username, message, meetingCode) => {
+        io.to(meetingCode).emit("messageArrived", username, message);
     })
 
     socket.on("getMembers", (meetingCode) => {
-        io.to(meetingCode).emit("fetchedMembers", RoomToEmail.get(meetingCode))
-        console.log("room: ", RoomToEmail.get(meetingCode));
+        io.to(meetingCode).emit("fetchedMembers", RoomToUserName.get(meetingCode))
+        console.log("room: ", RoomToUserName.get(meetingCode));
     })
 
     //Shapes

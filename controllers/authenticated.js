@@ -1,4 +1,6 @@
 const jwt = require('jsonwebtoken');
+const getUser = require('./getUser');
+const { users } = require('../models');
 
 async function userAuthenticated(req, res) {
     try {
@@ -12,9 +14,11 @@ async function userAuthenticated(req, res) {
 
         const verified = jwt.verify(token, "Realtime-Whiteboard");
         if (verified) {
+            let user = await users.findOne({email: verified.email})
             console.log("user authorized");
             return res.status(200).json({
-                message: "authorized: Token valid"
+                message: "authorized: Token valid",
+                name: user.name
             })
         }
         else {
