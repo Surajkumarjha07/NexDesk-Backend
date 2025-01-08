@@ -16,6 +16,7 @@ const { handleNotesFeatures } = require('./Sockets/noteSocket');
 const { handleTextFeatures } = require('./Sockets/textSocket');
 const authenticate = require('./middlewares/authenticate');
 const cookieParser = require('cookie-parser');
+const { handleImageFeatures } = require('./Sockets/imageSocket');
 
 const app = express();
 app.use(express.json());
@@ -78,13 +79,13 @@ io.on('connection', (socket) => {
         }
         RoomToUserName.get(meetingCode).push(username);
         socket.join(meetingCode);
-        socket.emit('roomCreated', username, meetingCode);
+        socket.emit('roomCreated', { username, meetingCode });
     })
 
     socket.on('joinRoom', (username, meetingCode) => {
         socket.join(meetingCode);
-        socket.broadcast.to(meetingCode).emit("newUserJoined", username, meetingCode);
-        io.to(socket.id).emit("roomJoined", username, meetingCode);
+        socket.broadcast.to(meetingCode).emit("newUserJoined", { username, meetingCode });
+        io.to(socket.id).emit("roomJoined", { username, meetingCode });
         UserNameToEmail.set(username, meetingCode);
         if (!RoomToUserName.has(meetingCode)) {
             RoomToUserName.set(meetingCode, []);
@@ -93,7 +94,7 @@ io.on('connection', (socket) => {
     })
 
     socket.on("message", (username, message, meetingCode) => {
-        io.to(meetingCode).emit("messageArrived", username, message);
+        io.to(meetingCode).emit("messageArrived", {username, message});
     })
 
     socket.on("getMembers", (meetingCode) => {
@@ -109,6 +110,9 @@ io.on('connection', (socket) => {
 
     //Text
     handleTextFeatures(socket);
+
+    //Image
+    handleImageFeatures(socket);
 
     socket.on('disconnect', () => {
         console.log('A user disconnected', socket.id);
