@@ -3,10 +3,8 @@ const bcrypt = require("bcrypt");
 
 async function updateUser(req, res) {
     try {
-        let { newEmail, newName, currentPassword, newPassword } = req.body
+        const { newEmail, newName, currentPassword, newPassword } = req.body
         const { email } = req.user;
-        let existingEmail = await users.findOne({ email: newEmail })
-        let passwordMatched;
         if (!email) {
             res.status(410).json({
                 message: "email not provided"
@@ -14,11 +12,21 @@ async function updateUser(req, res) {
             return;
         }
 
+        if (!newEmail && !newPassword && !newName) {
+            res.status(400).json({
+                message: "Provide atleast one field to update"
+            });
+            return;
+        }
+
         if (!currentPassword) {
             res.status(460).json({
                 message: "Previous password needed"
-            })
+            });
+            return;
         }
+        let existingEmail = await users.findOne({ email: newEmail })
+        let passwordMatched;
 
         let user = await users.findOne({ email })
         if (user) {
@@ -26,15 +34,8 @@ async function updateUser(req, res) {
         }
 
         if (!passwordMatched) {
-            res.status(420).json({
+            res.status(401).json({
                 message: "Incorrect password"
-            });
-            return;
-        }
-
-        if (!newEmail && !newPassword && !newName) {
-            res.status(430).json({
-                message: "Provide atleast one field to update"
             });
             return;
         }
@@ -53,12 +54,6 @@ async function updateUser(req, res) {
             const hashedPassword = await bcrypt.hash(newPassword, Salt);
             updatedUser.password = hashedPassword;
         }
-        else {
-            res.status(470).json({
-                message: "new password required"
-            });
-            return;
-        }
 
         await users.updateOne({ email }, { $set: updatedUser })
         res.status(200).json({
@@ -66,6 +61,9 @@ async function updateUser(req, res) {
         })
     } catch (error) {
         console.log("Some error occured", error);
+        res.status(500).json({
+            message: "Internal server error"
+        });
     }
 }
 
