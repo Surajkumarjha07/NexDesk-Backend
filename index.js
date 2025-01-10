@@ -1,28 +1,35 @@
 const express = require('express');
 const ConnectDatabase = require('./database');
 const cors = require("cors");
+const jwt = require('jsonwebtoken');
 const SignUp = require('./routes/SignUp');
 const login = require("./routes/login");
 const updateUser = require('./routes/update');
 const deleteUser = require('./routes/delete');
 const getUser = require("./routes/getUser")
+const userAuthenticated = require("./routes/userAuthenticated")
+const signOut = require("./routes/signOut");
 const { Server } = require('socket.io');
 const http = require('http');
 const { handleShapeFeatures } = require("./Sockets/shapeSocket");
 const { handleNotesFeatures } = require('./Sockets/noteSocket');
 const { handleTextFeatures } = require('./Sockets/textSocket');
+const authenticate = require('./middlewares/authenticate');
+const cookieParser = require('cookie-parser');
+const { handleImageFeatures } = require('./Sockets/imageSocket');
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
-corsOptions = {
-    methods: "*",
+const corsOptions = {
     origin: "http://localhost:3000",
-    allowCredentias: true,
-    allowOrigin: true
-}
-app.use(cors(corsOptions))
+    methods: ["GET", "POST", "PUT", "DELETE", "HEAD", "PATCH", "OPTIONS"],
+    credentials: true,
+};
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 ConnectDatabase()
 
@@ -30,11 +37,13 @@ app.get("/", (req, res) => {
     res.send("Hello Mr. Wayne");
 })
 
-app.use("/signUp", SignUp)
-app.use("/login", login)
-app.use('/updateUser', updateUser)
-app.use("/deleteUser", deleteUser)
-app.use("/getUser", getUser)
+app.use("/signUp", SignUp);
+app.use("/login", login);
+app.use("/signOut", signOut);
+app.use('/updateUser', authenticate, updateUser);
+app.use("/deleteUser", authenticate, deleteUser);
+app.use("/getUser", authenticate, getUser);
+app.use("/userAuthenticated", userAuthenticated);
 
 const colors = ["bg-red-200", "bg-blue-200", "bg-yellow-200", "bg-green-200", "bg-orange-200", "bg-pink-200", "bg-violet-200"];
 
@@ -44,13 +53,12 @@ const io = new Server(server, {
     cors: corsOptions
 });
 
-const EmailToRoom = new Map();
-const RoomToEmail = new Map();
+const RoomToUserName = new Map();
 
 io.on('connection', (socket) => {
     console.log('socket io connected', socket.id);
 
-    socket.on("newMeeting", (email) => {
+    socket.on("newMeeting", (username, userEmail) => {
         let alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklomnopqrstuvwxyz";
         let nums = "0123456789";
         let meetingCode = '';
@@ -64,33 +72,30 @@ io.on('connection', (socket) => {
             let pos = Math.floor(Math.random() * nums.length);
             meetingCode = meetingCode + nums[pos];
         }
-        EmailToRoom.set(email, meetingCode);
-        if (!RoomToEmail.has(meetingCode)) {
-            RoomToEmail.set(meetingCode, []);
+        if (!RoomToUserName.has(meetingCode)) {
+            RoomToUserName.set(meetingCode, []);
         }
-        RoomToEmail.get(meetingCode).push(email);
+        RoomToUserName.get(meetingCode).push({ userEmail, username });
         socket.join(meetingCode);
-        socket.emit('roomCreated', email, meetingCode);
+        socket.emit('roomCreated', { username, userEmail, meetingCode });
     })
 
-    socket.on('joinRoom', (email, meetingCode) => {
+    socket.on('joinRoom', (username, userEmail, meetingCode) => {
         socket.join(meetingCode);
-        io.to(meetingCode).emit("newUserJoined", email, meetingCode);
-        io.to(socket.id).emit("roomJoined", email, meetingCode);
-        EmailToRoom.set(email, meetingCode);
-        if (!RoomToEmail.has(meetingCode)) {
-            RoomToEmail.set(meetingCode, []);
+        socket.broadcast.to(meetingCode).emit("newUserJoined", { username, userEmail, meetingCode });
+        io.to(socket.id).emit("roomJoined", { username, userEmail, meetingCode });
+        if (!RoomToUserName.has(meetingCode)) {
+            RoomToUserName.set(meetingCode, []);
         }
-        RoomToEmail.get(meetingCode).push(email);
+        RoomToUserName.get(meetingCode).push({ userEmail, username });
     })
 
-    socket.on("message", (email, message, meetingCode) => {
-        io.to(meetingCode).emit("messageArrived", email, message);
+    socket.on("message", (username, message, meetingCode) => {
+        io.to(meetingCode).emit("messageArrived", { username, message });
     })
 
     socket.on("getMembers", (meetingCode) => {
-        io.to(meetingCode).emit("fetchedMembers", RoomToEmail.get(meetingCode))
-        console.log("room: ", RoomToEmail.get(meetingCode));
+        io.to(meetingCode).emit("fetchedMembers", RoomToUserName.get(meetingCode))
     })
 
     //Shapes
@@ -101,6 +106,20 @@ io.on('connection', (socket) => {
 
     //Text
     handleTextFeatures(socket);
+
+    //Image
+    handleImageFeatures(socket);
+
+    socket.on("userDisconnect", (data) => {
+        const { userEmail, username, meetingCode } = data;
+        console.log("user disc. ", userEmail, username, meetingCode);
+        const roomData = RoomToUserName.get(meetingCode);
+        const updatedData = roomData.filter(member => member.userEmail !== userEmail);
+        RoomToUserName.set(meetingCode, []);
+        RoomToUserName.set(meetingCode, updatedData);
+        socket.broadcast.to(meetingCode).emit("userDisconnected", { userEmail, username, updatedRoom: RoomToUserName.get(meetingCode) });
+        io.to(socket.id).emit("urDisconnected");
+    })
 
     socket.on('disconnect', () => {
         console.log('A user disconnected', socket.id);

@@ -29,7 +29,6 @@ function handleTextFeatures(socket) {
 
     socket.on("inputErase", (data) => {
         const { meetingCode, id } = data;
-        console.log("data: ", data);
         socket.broadcast.to(meetingCode).emit("inputErased", id);
     })
 
