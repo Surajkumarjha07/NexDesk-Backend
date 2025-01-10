@@ -53,13 +53,12 @@ const io = new Server(server, {
     cors: corsOptions
 });
 
-const UserNameToEmail = new Map();
 const RoomToUserName = new Map();
 
 io.on('connection', (socket) => {
     console.log('socket io connected', socket.id);
 
-    socket.on("newMeeting", (username) => {
+    socket.on("newMeeting", (username, userEmail) => {
         let alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklomnopqrstuvwxyz";
         let nums = "0123456789";
         let meetingCode = '';
@@ -73,33 +72,30 @@ io.on('connection', (socket) => {
             let pos = Math.floor(Math.random() * nums.length);
             meetingCode = meetingCode + nums[pos];
         }
-        UserNameToEmail.set(username, meetingCode);
         if (!RoomToUserName.has(meetingCode)) {
             RoomToUserName.set(meetingCode, []);
         }
-        RoomToUserName.get(meetingCode).push(username);
+        RoomToUserName.get(meetingCode).push({ userEmail, username });
         socket.join(meetingCode);
-        socket.emit('roomCreated', { username, meetingCode });
+        socket.emit('roomCreated', { username, userEmail, meetingCode });
     })
 
-    socket.on('joinRoom', (username, meetingCode) => {
+    socket.on('joinRoom', (username, userEmail, meetingCode) => {
         socket.join(meetingCode);
-        socket.broadcast.to(meetingCode).emit("newUserJoined", { username, meetingCode });
-        io.to(socket.id).emit("roomJoined", { username, meetingCode });
-        UserNameToEmail.set(username, meetingCode);
+        socket.broadcast.to(meetingCode).emit("newUserJoined", { username, userEmail, meetingCode });
+        io.to(socket.id).emit("roomJoined", { username, userEmail, meetingCode });
         if (!RoomToUserName.has(meetingCode)) {
             RoomToUserName.set(meetingCode, []);
         }
-        RoomToUserName.get(meetingCode).push(username);
+        RoomToUserName.get(meetingCode).push({ userEmail, username });
     })
 
     socket.on("message", (username, message, meetingCode) => {
-        io.to(meetingCode).emit("messageArrived", {username, message});
+        io.to(meetingCode).emit("messageArrived", { username, message });
     })
 
     socket.on("getMembers", (meetingCode) => {
         io.to(meetingCode).emit("fetchedMembers", RoomToUserName.get(meetingCode))
-        console.log("room: ", RoomToUserName.get(meetingCode));
     })
 
     //Shapes
@@ -113,6 +109,17 @@ io.on('connection', (socket) => {
 
     //Image
     handleImageFeatures(socket);
+
+    socket.on("userDisconnect", (data) => {
+        const { userEmail, username, meetingCode } = data;
+        console.log("user disc. ", userEmail, username, meetingCode);
+        const roomData = RoomToUserName.get(meetingCode);
+        const updatedData = roomData.filter(member => member.userEmail !== userEmail);
+        RoomToUserName.set(meetingCode, []);
+        RoomToUserName.set(meetingCode, updatedData);
+        socket.broadcast.to(meetingCode).emit("userDisconnected", { userEmail, username, updatedRoom: RoomToUserName.get(meetingCode) });
+        io.to(socket.id).emit("urDisconnected");
+    })
 
     socket.on('disconnect', () => {
         console.log('A user disconnected', socket.id);
