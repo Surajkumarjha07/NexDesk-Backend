@@ -3,6 +3,7 @@ const { users } = require("../models");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const cookieParser = require("cookie-parser");
+require("dotenv").config();
 
 const app = express();
 app.use(cookieParser());
@@ -31,7 +32,7 @@ async function login(req, res) {
         }
 
         if (existingUser && decodedPassword) {
-            const token = jwt.sign({ email, name: existingUser.name }, "Realtime-Whiteboard", { expiresIn: '1h' })
+            const token = jwt.sign({ email, name: existingUser.name }, process.env.JWT_SECRET, { expiresIn: '1h' })
             res.cookie("authtoken", token, { maxAge: 60 * 60 * 1000 })
             res.status(200).json({
                 message: "user found",

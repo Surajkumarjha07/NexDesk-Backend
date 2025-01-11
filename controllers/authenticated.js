@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
-const getUser = require('./getUser');
 const { users } = require('../models');
+require("dotenv").config();
 
 async function userAuthenticated(req, res) {
     try {
@@ -12,7 +12,7 @@ async function userAuthenticated(req, res) {
             })
         }
 
-        const verified = jwt.verify(token, "Realtime-Whiteboard");
+        const verified = jwt.verify(token, process.env.JWT_SECRET);
         if (verified) {
             let user = await users.findOne({email: verified.email})
             console.log("user authorized");
