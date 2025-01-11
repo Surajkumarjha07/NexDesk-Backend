@@ -1,6 +1,7 @@
 const cookieParser = require("cookie-parser");
 const express = require("express")
 const jwt = require('jsonwebtoken');
+require("dotenv").config();
 
 const app = express();
 app.use(cookieParser());
@@ -13,7 +14,7 @@ async function authenticate(req, res, next) {
     }
 
     try {
-        let verified = jwt.verify(token, "Realtime-Whiteboard");
+        let verified = jwt.verify(token, process.env.JWT_SECRET);
         if (verified) {
             req.user = verified;
             next();

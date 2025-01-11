@@ -6,7 +6,6 @@ const SignUp = require('./routes/SignUp');
 const login = require("./routes/login");
 const updateUser = require('./routes/update');
 const deleteUser = require('./routes/delete');
-const getUser = require("./routes/getUser")
 const userAuthenticated = require("./routes/userAuthenticated")
 const signOut = require("./routes/signOut");
 const { Server } = require('socket.io');
@@ -42,7 +41,6 @@ app.use("/login", login);
 app.use("/signOut", signOut);
 app.use('/updateUser', authenticate, updateUser);
 app.use("/deleteUser", authenticate, deleteUser);
-app.use("/getUser", authenticate, getUser);
 app.use("/userAuthenticated", userAuthenticated);
 
 const colors = ["bg-red-200", "bg-blue-200", "bg-yellow-200", "bg-green-200", "bg-orange-200", "bg-pink-200", "bg-violet-200"];
