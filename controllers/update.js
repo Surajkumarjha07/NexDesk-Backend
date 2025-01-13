@@ -7,7 +7,7 @@ async function updateUser(req, res) {
         const { email } = req.user;
         if (!email) {
             res.status(410).json({
-                message: "email not provided"
+                message: "user not authorized"
             });
             return;
         }

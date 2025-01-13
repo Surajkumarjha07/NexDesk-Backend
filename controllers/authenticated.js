@@ -6,7 +6,6 @@ async function userAuthenticated(req, res) {
     try {
         const token = req.cookies.authtoken || req.headers["authorization"].split(" ")[1];
         if (!token) {
-            console.log("token expired");
             return res.status(401).json({
                 message: "token expired"
             })
@@ -14,11 +13,8 @@ async function userAuthenticated(req, res) {
 
         const verified = jwt.verify(token, process.env.JWT_SECRET);
         if (verified) {
-            let user = await users.findOne({email: verified.email})
-            console.log("user authorized");
             return res.status(200).json({
                 message: "authorized: Token valid",
-                name: user.name
             })
         }
         else {

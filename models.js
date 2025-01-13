@@ -1,4 +1,4 @@
-const mongoose = require("mongoose")
+const mongoose = require("mongoose");
 
 const textSchema = new mongoose.Schema({
     id: Number,
@@ -9,9 +9,9 @@ const textSchema = new mongoose.Schema({
     textSize: String,
     fontFamily: String,
     textBrightness: Number,
-    textAlign: String,  
+    textAlign: String,
     modify: Boolean,
-},{_id: false})
+}, { _id: false });
 
 const shapeSchema = new mongoose.Schema({
     id: Number,
@@ -25,7 +25,7 @@ const shapeSchema = new mongoose.Schema({
     borderType: String,
     opacity: Number,
     modify: Boolean
-}, {_id: false})
+}, { _id: false });
 
 const noteSchema = new mongoose.Schema({
     id: Number,
@@ -38,7 +38,7 @@ const noteSchema = new mongoose.Schema({
     noteTextBrightness: Number,
     noteTextAlign: String,
     modify: Boolean,
-}, {_id: false})
+}, { _id: false });
 
 const imageSchema = new mongoose.Schema({
     id: Number,
@@ -51,35 +51,35 @@ const imageSchema = new mongoose.Schema({
     contrast: Number,
     saturation: Number,
     modify: Boolean
-}, {_id: Float32Array})
+}, { _id: false });
 
 const whiteboardSchema = new mongoose.Schema({
-    texts: {
-        type: [textSchema],
-        default: []
+    meetingCode: {
+        type: String,
+        required: true
     },
-    shapes: {
-        type: [shapeSchema],
-        default: []
-    },
-    notes: {
-        type: [noteSchema],
-        default: []
-    },
-    images: {
-        type: [imageSchema],
-        default: []
-    }
-}, {_id: false})
+    texts: [{
+        type: textSchema,
+    }],
+    shapes: [{
+        type: shapeSchema
+    }],
+    notes: [{
+        type: noteSchema
+    }],
+    images: [{
+        type: imageSchema
+    }]
+}, { _id: false });
 
 const UserSchema = new mongoose.Schema({
+    name: {
+        type: String,
+        required: true
+    },
     email: {
         type: String,
         unique: true,
-        required: true
-    },
-    name: {
-        type: String,
         required: true
     },
     password: {
@@ -88,10 +88,11 @@ const UserSchema = new mongoose.Schema({
     },
     whiteboards: {
         type: [whiteboardSchema],
-        default: []
+        default: [],
+        required: false
     }
-})
+});
 
 const users = mongoose.model("users", UserSchema);
 
-module.exports = {users, UserSchema};
+module.exports = { users, UserSchema };
