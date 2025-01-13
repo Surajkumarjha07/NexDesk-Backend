@@ -1,7 +1,6 @@
 const express = require('express');
 const ConnectDatabase = require('./database');
 const cors = require("cors");
-const jwt = require('jsonwebtoken');
 const SignUp = require('./routes/SignUp');
 const login = require("./routes/login");
 const updateUser = require('./routes/update');
@@ -16,6 +15,10 @@ const { handleTextFeatures } = require('./Sockets/textSocket');
 const authenticate = require('./middlewares/authenticate');
 const cookieParser = require('cookie-parser');
 const { handleImageFeatures } = require('./Sockets/imageSocket');
+const saveWhiteBoard = require("./routes/saveWhiteboard");
+const getWhiteboards = require("./routes/getWhiteboard");
+const openWhiteboard = require("./routes/openWhiteboard");
+const deleteWhiteboard = require("./routes/deleteWhiteboard");
 
 const app = express();
 app.use(express.json());
@@ -42,8 +45,10 @@ app.use("/signOut", signOut);
 app.use('/updateUser', authenticate, updateUser);
 app.use("/deleteUser", authenticate, deleteUser);
 app.use("/userAuthenticated", userAuthenticated);
-
-const colors = ["bg-red-200", "bg-blue-200", "bg-yellow-200", "bg-green-200", "bg-orange-200", "bg-pink-200", "bg-violet-200"];
+app.use("/saveWhiteBoard", authenticate, saveWhiteBoard);
+app.use("/getWhiteboards", authenticate, getWhiteboards);
+app.use("/openWhiteboard", authenticate, openWhiteboard);
+app.use("/deleteWhiteboard", authenticate, deleteWhiteboard);
 
 //Socket Connection
 const server = http.createServer(app);
