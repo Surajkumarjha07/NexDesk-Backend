@@ -26,7 +26,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 const corsOptions = {
-    origin: "https://nexdesk-frontend.onrender.com",
+    origin: "https://nexdesk.onrender.com",
     methods: ["GET", "POST", "PUT", "DELETE", "HEAD", "PATCH", "OPTIONS"],
     credentials: true,
 };
