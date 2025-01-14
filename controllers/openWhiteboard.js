@@ -15,7 +15,6 @@ async function openWhiteboard(req, res) {
         const user = await users.findOne({ email });
         if (user) {
             const whiteboard = user.whiteboards.find(whiteboard => whiteboard.meetingCode.trim() === meetingCode.trim());
-            console.log(whiteboard);
             res.status(200).json({
                 message: "whiteboard found",
                 whiteboard
