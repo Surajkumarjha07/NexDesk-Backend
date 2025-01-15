@@ -33,8 +33,6 @@ async function login(req, res) {
 
         if (existingUser && decodedPassword) {
             const token = jwt.sign({ email, name: existingUser.name }, process.env.JWT_SECRET, { expiresIn: '1h' });
-            res.header("Access-Control-Allow-Credentials", "true");
-            res.header("Access-Control-Allow-Origin", "https://nexdesk.onrender.com");
             res.cookie("authtoken", token, {
                 httpOnly: true,
                 sameSite: 'None',
