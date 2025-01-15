@@ -6,7 +6,12 @@ app.use(cookieParser());
 app.use(express.json());
 
 async function signOut(req, res) {
-    res.clearCookie("authtoken")
+    res.clearCookie("authtoken", {
+        httpOnly: true,
+        secure: true,
+        sameSite: "None",
+        path: "/",
+    })
     res.status(200).json({
         message: "user logged out"
     })
