@@ -115,7 +115,6 @@ io.on('connection', (socket) => {
 
     socket.on("userDisconnect", (data) => {
         const { userEmail, username, meetingCode } = data;
-        console.log("user disc. ", userEmail, username, meetingCode);
         const roomData = RoomToUserName.get(meetingCode);
         const updatedData = roomData.filter(member => member.userEmail !== userEmail);
         RoomToUserName.set(meetingCode, []);
