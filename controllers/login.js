@@ -40,14 +40,14 @@ async function login(req, res) {
                 maxAge: 60 * 60 * 1000,
                 path: "/"
             })
-            res.status(200).json({
+            return res.status(200).json({
                 message: "user found",
                 token
             })
         }
     } catch (error) {
         console.log("Some Error Occured", error);
-        res.status(500).json({
+        return res.status(500).json({
             message: "Internal server error"
         })
     }

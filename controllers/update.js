@@ -6,24 +6,21 @@ async function updateUser(req, res) {
         const { newEmail, newName, currentPassword, newPassword } = req.body
         const { email } = req.user;
         if (!email) {
-            res.status(410).json({
+            return res.status(410).json({
                 message: "user not authorized"
             });
-            return;
         }
 
         if (!newEmail && !newPassword && !newName) {
-            res.status(400).json({
+            return res.status(400).json({
                 message: "Provide atleast one field to update"
             });
-            return;
         }
 
         if (!currentPassword) {
-            res.status(460).json({
+            return res.status(460).json({
                 message: "Previous password needed"
             });
-            return;
         }
         let existingEmail = await users.findOne({ email: newEmail })
         let passwordMatched;
@@ -34,10 +31,9 @@ async function updateUser(req, res) {
         }
 
         if (!passwordMatched) {
-            res.status(401).json({
+            return res.status(401).json({
                 message: "Incorrect password"
             });
-            return;
         }
 
         let updatedUser = {}
@@ -56,12 +52,12 @@ async function updateUser(req, res) {
         }
 
         await users.updateOne({ email }, { $set: updatedUser })
-        res.status(200).json({
+        return res.status(200).json({
             message: "User updated"
         })
     } catch (error) {
         console.log("Some error occured", error);
-        res.status(500).json({
+        return res.status(500).json({
             message: "Internal server error"
         });
     }

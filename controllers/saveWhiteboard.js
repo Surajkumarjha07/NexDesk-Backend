@@ -4,10 +4,9 @@ async function saveWhiteboard(req, res) {
     const { meetingCode, texts, shapes, notes, images } = req.body;
     const { email } = req.user;
     if (!email) {
-        res.status(400).json({
+        return res.status(400).json({
             message: "user not authorized"
         });
-        return;
     }
 
     const user = await users.findOne({ email });
@@ -25,16 +24,16 @@ async function saveWhiteboard(req, res) {
         if (existingWhiteboard) {
             user.whiteboards.remove(existingWhiteboard)
         }
-        
+
         user.whiteboards.push(newWhiteboard);
         await user.save();
-        res.status(200).json({
+        return res.status(200).json({
             message: "whiteboard added",
-        })
+        });
     }
     else {
-        res.status(404).json({
-            message: "unauthenticated user"
+        return res.status(404).json({
+            message: "user not found"
         })
     }
 }
