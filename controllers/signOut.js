@@ -12,7 +12,7 @@ async function signOut(req, res) {
         sameSite: "None",
         path: "/",
     })
-    res.status(200).json({
+    return res.status(200).json({
         message: "user logged out"
     })
 }
