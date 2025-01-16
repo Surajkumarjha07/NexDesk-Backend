@@ -33,6 +33,13 @@ async function login(req, res) {
 
         if (existingUser && decodedPassword) {
             const token = jwt.sign({ email, name: existingUser.name }, process.env.JWT_SECRET, { expiresIn: '1h' });
+            res.cookie("authtoken", token, {
+                httpOnly: true,
+                sameSite: 'None',
+                secure: true,
+                maxAge: 60 * 1000,
+                path: "/"
+            })
             return res.status(200).json({
                 message: "user found",
                 token
