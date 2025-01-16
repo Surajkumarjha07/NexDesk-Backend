@@ -33,7 +33,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
 
-ConnectDatabase()
+ConnectDatabase();
 
 app.get("/", (req, res) => {
     res.send("Hello Mr. Wayne");

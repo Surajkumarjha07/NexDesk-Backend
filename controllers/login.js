@@ -37,11 +37,12 @@ async function login(req, res) {
                 httpOnly: true,
                 sameSite: 'None',
                 secure: true,
-                maxAge: 60 * 60 * 1000,
+                maxAge: 60 * 1000,
                 path: "/"
             })
             return res.status(200).json({
                 message: "user found",
+                token
             })
         }
     } catch (error) {
